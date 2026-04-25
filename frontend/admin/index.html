@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel – CBT Fisika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  --navy: #0a1628; --blue: #1a56db; --blue-light: #3b82f6;
+  --blue-pale: #dbeafe; --blue-ghost: #eff6ff;
+  --green: #10b981; --green-pale: #d1fae5;
+  --red: #ef4444; --red-pale: #fee2e2;
+  --accent: #f59e0b; --accent-pale: #fef3c7;
+  --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0;
+  --gray-300:#cbd5e1; --gray-400:#94a3b8; --gray-500:#64748b;
+  --gray-600:#475569; --gray-700:#334155; --gray-800:#1e293b;
+  --white:#ffffff;
+  --font:'Plus Jakarta Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --radius:12px;
+  --shadow:0 4px 24px rgba(10,22,40,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);min-height:100vh}
+
+/* Login */
+#login-screen {
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 100%);
+}
+.login-card {
+  background:var(--white);
+  border-radius:20px;
+  padding:40px;
+  width:min(400px,95vw);
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  text-align:center;
+}
+.login-logo {
+  width:56px;height:56px;
+  background:var(--blue);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:800;color:var(--white);
+  margin:0 auto 16px;
+}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:14px;color:var(--gray-500);margin-bottom:28px}
+
+/* Header */
+#app-screen{display:none}
+.header{
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 100%);
+  color:var(--white);padding:0 24px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 16px rgba(10,22,40,0.25);
+}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-logo{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--white)}
+.header-title{font-size:15px;font-weight:700}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.6)}
+.header-actions{display:flex;gap:10px;align-items:center}
+.btn-header{padding:7px 14px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+.btn-header-outline{background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.25)}
+.btn-header-outline:hover{background:rgba(255,255,255,0.2)}
+
+/* Layout */
+.admin-layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 64px)}
+
+/* Sidebar */
+.admin-sidebar{
+  background:var(--white);border-right:1px solid var(--gray-200);
+  padding:20px;
+  position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;
+  display:flex;flex-direction:column;gap:16px;
+}
+.sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--gray-400);margin-bottom:4px}
+.stat-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-chip{background:var(--gray-50);border-radius:10px;padding:12px;text-align:center}
+.stat-chip-val{font-size:22px;font-weight:800;color:var(--navy)}
+.stat-chip-lbl{font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.5px}
+
+.filter-group{display:flex;flex-direction:column;gap:8px}
+.filter-input,.filter-select{
+  padding:9px 12px;border:2px solid var(--gray-200);border-radius:8px;
+  font-family:var(--font);font-size:13px;color:var(--gray-700);
+  outline:none;transition:border 0.2s;width:100%;
+}
+.filter-input:focus,.filter-select:focus{border-color:var(--blue)}
+
+/* Main */
+.admin-main{padding:24px 28px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:20px;font-weight:800;color:var(--navy)}
+
+/* Table */
+.questions-table-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.questions-table{width:100%;border-collapse:collapse}
+.questions-table th{
+  background:var(--gray-50);padding:12px 16px;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--gray-500);text-align:left;border-bottom:1px solid var(--gray-200);
+}
+.questions-table td{padding:14px 16px;border-bottom:1px solid var(--gray-100);font-size:13px;vertical-align:middle}
+.questions-table tr:last-child td{border-bottom:none}
+.questions-table tr:hover td{background:var(--gray-50)}
+.q-text-cell{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gray-700)}
+.q-topic-pill{background:var(--blue-pale);color:var(--blue);padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.q-answer{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--navy)}
+.diff-pill{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase}
+.diff-mudah{background:var(--green-pale);color:var(--green)}
+.diff-sedang{background:var(--blue-pale);color:var(--blue)}
+.diff-sulit{background:var(--red-pale);color:var(--red)}
+.img-thumb{width:40px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--gray-200)}
+.badge-no-img{font-size:10px;color:var(--gray-400);font-style:italic}
+.action-btns{display:flex;gap:6px}
+
+/* Buttons */
+.btn{
+  padding:8px 16px;border-radius:8px;font-family:var(--font);
+  font-size:13px;font-weight:600;cursor:pointer;border:none;
+  transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--blue);color:var(--white);box-shadow:0 2px 8px rgba(26,86,219,0.25)}
+.btn-primary:hover{background:#1649c4}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700)}
+.btn-secondary:hover{background:var(--gray-200)}
+.btn-danger{background:var(--red-pale);color:var(--red)}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:var(--green-pale);color:var(--green)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* Form Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,22,40,0.65);
+  display:flex;align-items:flex-start;justify-content:center;
+  z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s;
+  padding:24px 16px;overflow-y:auto;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--white);border-radius:20px;width:min(680px,100%);
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  transform:scale(0.94);transition:transform 0.3s;
+  margin:auto;
+}
+.modal-overlay.show .modal{transform:scale(1)}
+.modal-header{
+  background:linear-gradient(135deg,var(--navy),#1a3a6b);
+  padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-radius:20px 20px 0 0;
+}
+.modal-title{font-size:18px;font-weight:800;color:var(--white)}
+.modal-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:4px}
+.modal-close:hover{color:var(--white)}
+.modal-body{padding:28px}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--gray-500)}
+.form-input,.form-select,.form-textarea{
+  padding:10px 14px;border:2px solid var(--gray-200);border-radius:10px;
+  font-family:var(--font);font-size:14px;color:var(--gray-800);
+  outline:none;transition:border 0.2s;width:100%;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,0.08)}
+.form-textarea{resize:vertical;min-height:100px;line-height:1.6}
+.form-hint{font-size:11px;color:var(--gray-400)}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-100)}
+
+/* Image upload zone */
+.upload-zone{
+  border:2px dashed var(--gray-200);border-radius:10px;padding:20px;
+  text-align:center;cursor:pointer;transition:all 0.2s;position:relative;
+}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--blue);background:var(--blue-ghost)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone-icon{font-size:28px;margin-bottom:6px}
+.upload-zone-text{font-size:13px;color:var(--gray-500)}
+.upload-preview{
+  width:100%;max-height:120px;object-fit:contain;border-radius:8px;
+  margin-top:10px;border:1px solid var(--gray-200);display:none;
+}
+.upload-uploading{font-size:12px;color:var(--blue);margin-top:6px;display:none}
+.upload-clear{
+  margin-top:8px;display:none;
+  background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;font-family:var(--font);
+}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:24px;right:24px;
+  padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+  transform:translateY(60px);opacity:0;transition:all 0.3s;
+  z-index:999;max-width:320px;
+}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{background:var(--green);color:var(--white)}
+#toast.error{background:var(--red);color:var(--white)}
+#toast.info{background:var(--blue);color:var(--white)}
+
+/* Status badge */
+.status-badge{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.status-active{background:var(--green-pale);color:var(--green)}
+.status-inactive{background:var(--gray-100);color:var(--gray-400)}
+
+/* Empty/loading states */
+.table-state{padding:48px;text-align:center;color:var(--gray-400)}
+.table-state-icon{font-size:36px;margin-bottom:8px}
+
+/* Responsive */
+@media(max-width:768px){
+  .admin-layout{grid-template-columns:1fr}
+  .admin-sidebar{position:static;height:auto}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Ω</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">CBT Fisika OSK – Dashboard Guru</div>
+    <div class="form-group" style="text-align:left;margin-bottom:16px">
+      <label class="form-label">Admin Key</label>
+      <input type="password" class="form-input" id="login-key" placeholder="Masukkan admin key..." />
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="login-btn">
+      🔑 Masuk
+    </button>
+    <p style="font-size:12px;color:var(--gray-400);margin-top:12px" id="login-error"></p>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<div id="app-screen">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">Ω</div>
+      <div>
+        <div class="header-title">Admin Panel – CBT Fisika</div>
+        <div class="header-sub">Manajemen Soal &amp; Konten</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="../index.html" target="_blank">
+        <button class="btn-header btn-header-outline">🔗 Lihat CBT</button>
+      </a>
+      <button class="btn-header btn-header-outline" id="logout-btn">Keluar</button>
+    </div>
+  </header>
+
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div>
+        <div class="sidebar-title">Statistik</div>
+        <div class="stat-chips">
+          <div class="stat-chip">
+            <div class="stat-chip-val" id="stat-total">–</div>
+            <div class="stat-chip-lbl">Total</div>
+          </div>
+          <div class="stat-chip">
+            <div class="stat-chip-val" id="stat-active" style="color:var(--green)">–</div>
+            <div class="stat-chip-lbl">Aktif</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-title">Filter</div>
+        <div class="filter-group">
+          <input type="text" class="filter-input" id="filter-topic" placeholder="Filter topik..." />
+          <select class="filter-select" id="filter-difficulty">
+            <option value="">Semua tingkat</option>
+            <option value="mudah">Mudah</option>
+            <option value="sedang">Sedang</option>
+            <option value="sulit">Sulit</option>
+          </select>
+          <select class="filter-select" id="filter-active">
+            <option value="">Semua status</option>
+            <option value="true">Aktif</option>
+            <option value="false">Nonaktif</option>
+          </select>
+          <button class="btn btn-secondary" id="btn-filter" style="width:100%;justify-content:center">
+            🔍 Terapkan Filter
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-title">Tools</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-secondary" id="btn-seed" style="width:100%;justify-content:center;font-size:12px">
+            🌱 Seed Data Awal
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <div class="page-header">
+        <div class="page-title" id="page-title">Daftar Soal</div>
+        <button class="btn btn-primary" id="btn-add">
+          ➕ Tambah Soal
+        </button>
+      </div>
+
+      <div class="questions-table-wrap">
+        <table class="questions-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Teks Soal</th>
+              <th>Topik</th>
+              <th>Jawaban</th>
+              <th>Tingkat</th>
+              <th>Gambar</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="questions-tbody">
+            <tr><td colspan="8" class="table-state">
+              <div class="table-state-icon">⏳</div>
+              <div>Memuat soal...</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ── Question Form Modal ── -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="form-modal-title">Tambah Soal</div>
+      <button class="modal-close" id="form-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="form-id" />
+      <div class="form-grid">
+
+        <div class="form-group full">
+          <label class="form-label">Teks Soal <span style="color:var(--red)">*</span></label>
+          <textarea class="form-textarea" id="form-text" placeholder="Gunakan $...$ untuk LaTeX inline, $$...$$ untuk display..." style="min-height:120px"></textarea>
+          <span class="form-hint">Mendukung LaTeX: $F = ma$, $$\int_0^\infty e^{-x} dx$$</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Jawaban (angka) <span style="color:var(--red)">*</span></label>
+          <input type="number" step="any" class="form-input" id="form-answer" placeholder="mis. 9.8" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Toleransi</label>
+          <input type="number" step="any" class="form-input" id="form-tolerance" placeholder="0 = 6% otomatis" value="0" />
+          <span class="form-hint">0 = pakai toleransi relatif 6%</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Satuan</label>
+          <input type="text" class="form-input" id="form-unit" placeholder="mis. m/s, N, kg m²" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Topik <span style="color:var(--red)">*</span></label>
+          <input type="text" class="form-input" id="form-topic" placeholder="mis. Kinematika – Parabola" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tingkat Kesulitan</label>
+          <select class="form-select" id="form-difficulty">
+            <option value="mudah">Mudah</option>
+            <option value="sedang" selected>Sedang</option>
+            <option value="sulit">Sulit</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="form-active">
+            <option value="true">Aktif</option>
+            <option value="false">Nonaktif</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Gambar</label>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="form-image-file" accept="image/*" />
+            <div class="upload-zone-icon">🖼️</div>
+            <div class="upload-zone-text">Klik atau drag &amp; drop gambar di sini<br><small>JPG, PNG, WEBP – maks. 5MB</small></div>
+            <img class="upload-preview" id="upload-preview" alt="Preview" />
+            <div class="upload-uploading" id="upload-uploading">⏳ Mengunggah...</div>
+            <button class="upload-clear" id="upload-clear" type="button">✕ Hapus gambar</button>
+          </div>
+          <input type="hidden" id="form-image-url" />
+          <input type="hidden" id="form-image-public-id" />
+          <span class="form-hint" id="form-image-hint">Atau masukkan URL langsung:</span>
+          <input type="url" class="form-input" id="form-image-url-direct" placeholder="https://res.cloudinary.com/..." style="margin-top:6px" />
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Pembahasan / Penjelasan</label>
+          <textarea class="form-textarea" id="form-explanation" placeholder="Penjelasan lengkap untuk review mode. Mendukung LaTeX."></textarea>
+        </div>
+
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" id="form-cancel">Batal</button>
+        <button class="btn btn-primary" id="form-save">💾 Simpan Soal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script type="module">
+import { adminApi } from './adminApi.js';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let questions = [];
+let editingId = null;
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const key = document.getElementById('login-key').value.trim();
+  if (!key) return;
+  try {
+    await adminApi.login(key);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display   = 'block';
+    loadQuestions();
+  } catch (e) {
+    document.getElementById('login-error').textContent = '❌ ' + e.message;
+  }
+});
+
+document.getElementById('login-key').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('adminKey');
+  location.reload();
+});
+
+// ── Load Questions ────────────────────────────────────────────────────────────
+async function loadQuestions(params = '') {
+  const tbody = document.getElementById('questions-tbody');
+  tbody.innerHTML = `<tr><td colspan="8" class="table-state"><div class="table-state-icon">⏳</div><div>Memuat...</div></td></tr>`;
+  try {
+    const res = await adminApi.getQuestions(params);
+    questions  = res.data;
+
+    // Stats
+    document.getElementById('stat-total').textContent  = questions.length;
+    document.getElementById('stat-active').textContent = questions.filter(q => q.isActive).length;
+
+    if (questions.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="table-state"><div class="table-state-icon">📭</div><div>Belum ada soal. Tambahkan soal atau gunakan Seed Data.</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = questions.map((q, i) => `
+      <tr>
+        <td style="color:var(--gray-400);font-size:12px">${i + 1}</td>
+        <td class="q-text-cell" title="${q.text}">${stripLatex(q.text)}</td>
+        <td><span class="q-topic-pill">${q.topic}</span></td>
+        <td class="q-answer">${q.answer}${q.unit ? ' ' + q.unit : ''}</td>
+        <td><span class="diff-pill diff-${q.difficulty}">${q.difficulty}</span></td>
+        <td>
+          ${q.image
+            ? `<img src="${q.image}" class="img-thumb" alt="img" onerror="this.style.display='none'" />`
+            : `<span class="badge-no-img">—</span>`}
+        </td>
+        <td><span class="status-badge ${q.isActive ? 'status-active' : 'status-inactive'}">${q.isActive ? 'Aktif' : 'Nonaktif'}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn btn-secondary btn-sm" onclick="editQuestion('${q._id}')">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${q._id}', '${stripLatex(q.text).substring(0,30)}...')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" class="table-state"><div class="table-state-icon">⚠️</div><div>Error: ${e.message}</div></td></tr>`;
+  }
+}
+
+function stripLatex(text) {
+  return text.replace(/\$\$[\s\S]*?\$\$|\$[^$]+\$/g, '[LaTeX]').replace(/<[^>]+>/g, '');
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-filter').addEventListener('click', () => {
+  const params = new URLSearchParams();
+  const topic  = document.getElementById('filter-topic').value.trim();
+  const diff   = document.getElementById('filter-difficulty').value;
+  const active = document.getElementById('filter-active').value;
+  if (topic)  params.set('topic', topic);
+  if (diff)   params.set('difficulty', diff);
+  if (active) params.set('isActive', active);
+  const q = params.toString();
+  loadQuestions(q ? '?' + q : '');
+});
+
+// ── Add/Edit Modal ────────────────────────────────────────────────────────────
+function openModal(title) {
+  document.getElementById('form-modal-title').textContent = title;
+  document.getElementById('form-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('form-modal').classList.remove('show');
+  clearForm();
+  editingId = null;
+}
+
+function clearForm() {
+  ['form-id','form-text','form-answer','form-tolerance','form-unit','form-topic','form-explanation','form-image-url','form-image-public-id','form-image-url-direct'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('form-difficulty').value = 'sedang';
+  document.getElementById('form-active').value = 'true';
+  document.getElementById('form-tolerance').value = '0';
+  resetUploadUI();
+}
+
+function resetUploadUI() {
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-clear').style.display = 'none';
+  document.getElementById('upload-uploading').style.display = 'none';
+  document.getElementById('form-image-file').value = '';
+}
+
+document.getElementById('btn-add').addEventListener('click', () => {
+  clearForm();
+  editingId = null;
+  openModal('Tambah Soal Baru');
+});
+
+document.getElementById('form-modal-close').addEventListener('click', closeModal);
+document.getElementById('form-cancel').addEventListener('click', closeModal);
+
+// Close on backdrop click
+document.getElementById('form-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('form-modal')) closeModal();
+});
+
+// ── Edit ──────────────────────────────────────────────────────────────────────
+window.editQuestion = async (id) => {
+  try {
+    const res = await adminApi.getQuestion(id);
+    const q   = res.data;
+    editingId = id;
+
+    document.getElementById('form-id').value          = q._id;
+    document.getElementById('form-text').value        = q.text;
+    document.getElementById('form-answer').value      = q.answer;
+    document.getElementById('form-tolerance').value   = q.tolerance || 0;
+    document.getElementById('form-unit').value        = q.unit || '';
+    document.getElementById('form-topic').value       = q.topic;
+    document.getElementById('form-difficulty').value  = q.difficulty || 'sedang';
+    document.getElementById('form-active').value      = String(q.isActive);
+    document.getElementById('form-explanation').value = q.explanation || '';
+
+    if (q.image) {
+      document.getElementById('form-image-url').value = q.image;
+      document.getElementById('form-image-public-id').value = q.imagePublicId || '';
+      document.getElementById('form-image-url-direct').value = q.image;
+      const preview = document.getElementById('upload-preview');
+      preview.src = q.image;
+      preview.style.display = 'block';
+      document.getElementById('upload-clear').style.display = 'block';
+    }
+
+    openModal('Edit Soal');
+  } catch (e) {
+    toast('Gagal memuat soal: ' + e.message, 'error');
+  }
+};
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+window.deleteQuestion = async (id, preview) => {
+  if (!confirm(`Hapus soal:\n"${preview}"\n\nTindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    await adminApi.deleteQuestion(id);
+    toast('Soal berhasil dihapus', 'success');
+    loadQuestions();
+  } catch (e) {
+    toast('Gagal menghapus: ' + e.message, 'error');
+  }
+};
+
+// ── Image Upload ──────────────────────────────────────────────────────────────
+document.getElementById('form-image-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const uploading = document.getElementById('upload-uploading');
+  const preview   = document.getElementById('upload-preview');
+  const clearBtn  = document.getElementById('upload-clear');
+
+  uploading.style.display = 'block';
+  preview.style.display   = 'none';
+
+  try {
+    const data = await adminApi.uploadImage(file);
+    document.getElementById('form-image-url').value         = data.url;
+    document.getElementById('form-image-public-id').value   = data.publicId;
+    document.getElementById('form-image-url-direct').value  = data.url;
+    preview.src = data.url;
+    preview.style.display = 'block';
+    clearBtn.style.display = 'block';
+    toast('Gambar berhasil diunggah', 'success');
+  } catch (e) {
+    toast('Gagal upload gambar: ' + e.message, 'error');
+  } finally {
+    uploading.style.display = 'none';
+  }
+});
+
+document.getElementById('upload-clear').addEventListener('click', () => {
+  document.getElementById('form-image-url').value = '';
+  document.getElementById('form-image-public-id').value = '';
+  document.getElementById('form-image-url-direct').value = '';
+  resetUploadUI();
+});
+
+// Sync direct URL input
+document.getElementById('form-image-url-direct').addEventListener('input', (e) => {
+  const url = e.target.value.trim();
+  document.getElementById('form-image-url').value = url;
+  const preview = document.getElementById('upload-preview');
+  if (url) { preview.src = url; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+});
+
+// Drag & drop
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const input = document.getElementById('form-image-file');
+    const dt    = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+});
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+document.getElementById('form-save').addEventListener('click', async () => {
+  const text        = document.getElementById('form-text').value.trim();
+  const answer      = parseFloat(document.getElementById('form-answer').value);
+  const topic       = document.getElementById('form-topic').value.trim();
+
+  if (!text || isNaN(answer) || !topic) {
+    toast('Teks soal, jawaban, dan topik wajib diisi', 'error');
+    return;
+  }
+
+  // Prefer direct URL input over uploaded
+  const imageUrl = document.getElementById('form-image-url-direct').value.trim()
+    || document.getElementById('form-image-url').value.trim() || null;
+
+  const payload = {
+    text,
+    answer,
+    tolerance:    parseFloat(document.getElementById('form-tolerance').value) || 0,
+    unit:         document.getElementById('form-unit').value.trim(),
+    topic,
+    difficulty:   document.getElementById('form-difficulty').value,
+    isActive:     document.getElementById('form-active').value === 'true',
+    explanation:  document.getElementById('form-explanation').value.trim(),
+    image:        imageUrl,
+    imagePublicId: document.getElementById('form-image-public-id').value || null,
+  };
+
+  const saveBtn = document.getElementById('form-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Menyimpan...';
+
+  try {
+    if (editingId) {
+      await adminApi.updateQuestion(editingId, payload);
+      toast('Soal berhasil diperbarui', 'success');
+    } else {
+      await adminApi.createQuestion(payload);
+      toast('Soal berhasil ditambahkan', 'success');
+    }
+    closeModal();
+    loadQuestions();
+  } catch (e) {
+    toast('Gagal menyimpan: ' + e.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Simpan Soal';
+  }
+});
+
+// ── Seed ─────────────────────────────────────────────────────────────────────
+document.getElementById('btn-seed').addEventListener('click', async () => {
+  if (!confirm('Seed akan mengisi database dengan soal dari file JSON.\nLanjutkan?')) return;
+
+  const input = document.createElement('input');
+  input.type  = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    const text = await file.text();
+    try {
+      const questions = JSON.parse(text);
+      if (!Array.isArray(questions)) throw new Error('File harus berisi array JSON');
+      await adminApi.seedQuestions(questions);
+      toast(`${questions.length} soal berhasil di-seed!`, 'success');
+      loadQuestions();
+    } catch (err) {
+      toast('Seed gagal: ' + err.message, 'error');
+    }
+  };
+  input.click();
+});
+
+// ── Auto-login if key already in sessionStorage ───────────────────────────────
+const savedKey = sessionStorage.getItem('adminKey');
+if (savedKey) {
+  adminApi.login(savedKey).then(() => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display   = 'block';
+    loadQuestions();
+  }).catch(() => sessionStorage.removeItem('adminKey'));
+}
+</script>
+</body>
+</html>
