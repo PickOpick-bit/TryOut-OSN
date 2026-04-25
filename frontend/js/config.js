@@ -6,7 +6,7 @@ const CONFIG = {
   // Example: 'https://cbt-platform-api.onrender.com'
   API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
-    : 'https://YOUR_RENDER_APP.onrender.com', // <-- REPLACE THIS
+    : 'https://tryout-osn-production.up.railway.app', 
 
   EXAM_DURATION_SECONDS: 90 * 60, // 90 minutes
   QUESTION_LIMIT: 40,
