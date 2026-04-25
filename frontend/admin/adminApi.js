@@ -3,7 +3,7 @@
 
 const BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
-  : 'https://tryout-osn-production.up.railway.app',
+  : 'https://tryout-osn-production.up.railway.app';
 
 function getKey() {
   return sessionStorage.getItem('adminKey') || '';
