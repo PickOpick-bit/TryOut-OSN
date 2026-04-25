@@ -25,11 +25,7 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: (origin, cb) => {
-    // Allow requests with no origin (e.g. curl, Postman, mobile)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS blocked: ${origin}`));
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'x-admin-key'],
 }));
