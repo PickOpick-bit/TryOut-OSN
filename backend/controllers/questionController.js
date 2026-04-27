@@ -283,14 +283,25 @@ exports.adminUploadImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
+
+    const { getImageKit } = require('../config/cloudinary');
+    const imagekit = getImageKit();
+
+    const result = await imagekit.upload({
+      file:     req.file.buffer,
+      fileName: `question-${Date.now()}-${req.file.originalname}`,
+      folder:   '/cbt-platform/questions',
+    });
+
     res.json({
       success: true,
       data: {
-        url: req.file.path,          // Cloudinary URL
-        publicId: req.file.filename, // Cloudinary public_id
+        url:      result.url,
+        publicId: result.fileId,
       },
     });
   } catch (err) {
+    console.error('ImageKit upload error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
