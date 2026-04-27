@@ -185,40 +185,13 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);min
 .upload-zone-icon{font-size:28px;margin-bottom:6px}
 .upload-zone-text{font-size:13px;color:var(--gray-500)}
 .upload-preview{
-  width:100%;max-height:160px;object-fit:contain;border-radius:8px;
+  width:100%;max-height:120px;object-fit:contain;border-radius:8px;
   margin-top:10px;border:1px solid var(--gray-200);display:none;
 }
 .upload-uploading{font-size:12px;color:var(--blue);margin-top:6px;display:none}
 .upload-clear{
-  margin-top:8px;display:none;width:100%;
-  background:var(--red-pale);border:none;color:var(--red);
-  font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);
-  padding:8px 14px;border-radius:8px;
-}
-.upload-clear:hover{background:#fecaca}
-
-/* Undo bar */
-.undo-bar{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:var(--gray-800);color:var(--white);
-  padding:14px 20px;border-radius:12px;
-  display:flex;align-items:center;gap:16px;
-  font-size:14px;font-weight:500;
-  box-shadow:0 8px 32px rgba(0,0,0,0.3);
-  z-index:9999;min-width:320px;
-  opacity:0;pointer-events:none;transition:opacity 0.3s;
-}
-.undo-bar.show{opacity:1;pointer-events:auto}
-.undo-bar-text{flex:1}
-.undo-progress{
-  position:absolute;bottom:0;left:0;height:3px;
-  background:var(--blue-light);border-radius:0 0 12px 12px;
-}
-.btn-undo{
-  background:var(--blue);color:var(--white);border:none;
-  padding:6px 14px;border-radius:8px;
-  font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;
-  white-space:nowrap;
+  margin-top:8px;display:none;
+  background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;font-family:var(--font);
 }
 
 /* Toast */
@@ -435,9 +408,10 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-800);min
             <div class="upload-zone-icon">🖼️</div>
             <div class="upload-zone-text">Klik atau drag &amp; drop gambar di sini<br><small>JPG, PNG, WEBP – maks. 5MB</small></div>
             <div class="upload-uploading" id="upload-uploading">⏳ Mengunggah...</div>
+            </div>
+            <img class="upload-preview" id="upload-preview" alt="Preview" style="display:none;width:100%;max-height:120px;object-fit:contain;border-radius:8px;margin-top:8px;border:1px solid var(--gray-200)" />
+            <button class="upload-clear" id="upload-clear" type="button" style="display:none;margin-top:8px;background:var(--red-pale);color:var(--red);border:none;padding:6px 14px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;">🗑️ Hapus Gambar</button>
           </div>
-          <img class="upload-preview" id="upload-preview" alt="Preview" />
-          <button class="upload-clear" id="upload-clear" type="button">🗑️ Hapus Gambar</button>
           <input type="hidden" id="form-image-url" />
           <input type="hidden" id="form-image-public-id" />
           <span class="form-hint" id="form-image-hint">Atau masukkan URL langsung:</span>
@@ -636,52 +610,17 @@ window.editQuestion = async (id) => {
   }
 };
 
-// ── Delete with Undo ──────────────────────────────────────────────────────────
-let undoTimer = null;
-let pendingDelete = null;
-
-window.deleteQuestion = (id, preview) => {
-  if (undoTimer) clearTimeout(undoTimer);
-
-  pendingDelete = { id, preview };
-
-  const bar      = document.getElementById('undo-bar');
-  const barText  = document.getElementById('undo-bar-text');
-  const progress = document.getElementById('undo-progress');
-
-  barText.textContent = `"${preview}" akan dihapus...`;
-  bar.classList.add('show');
-
-  // Animasi progress bar 15 detik
-  progress.style.transition = 'none';
-  progress.style.width = '100%';
-  setTimeout(() => {
-    progress.style.transition = 'width 15s linear';
-    progress.style.width = '0%';
-  }, 50);
-
-  // Auto delete setelah 15 detik
-  undoTimer = setTimeout(async () => {
-    bar.classList.remove('show');
-    if (!pendingDelete) return;
-    try {
-      await adminApi.deleteQuestion(pendingDelete.id);
-      toast('Soal berhasil dihapus', 'success');
-      loadQuestions();
-    } catch (e) {
-      toast('Gagal menghapus: ' + e.message, 'error');
-    }
-    pendingDelete = null;
-  }, 15000);
+// ── Delete ────────────────────────────────────────────────────────────────────
+window.deleteQuestion = async (id, preview) => {
+  if (!confirm(`Hapus soal:\n"${preview}"\n\nTindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    await adminApi.deleteQuestion(id);
+    toast('Soal berhasil dihapus', 'success');
+    loadQuestions();
+  } catch (e) {
+    toast('Gagal menghapus: ' + e.message, 'error');
+  }
 };
-
-// ── Undo Button ───────────────────────────────────────────────────────────────
-document.getElementById('btn-undo').addEventListener('click', () => {
-  clearTimeout(undoTimer);
-  pendingDelete = null;
-  document.getElementById('undo-bar').classList.remove('show');
-  toast('Penghapusan dibatalkan ✓', 'info');
-});
 
 // ── Image Upload ──────────────────────────────────────────────────────────────
 document.getElementById('form-image-file').addEventListener('change', async (e) => {
@@ -827,12 +766,5 @@ if (savedKey) {
   }).catch(() => sessionStorage.removeItem('adminKey'));
 }
 </script>
-<!-- Undo Bar -->
-<div class="undo-bar" id="undo-bar">
-  <div class="undo-progress" id="undo-progress"></div>
-  <div class="undo-bar-text" id="undo-bar-text">Soal akan dihapus...</div>
-  <button class="btn-undo" id="btn-undo">↩ Undo</button>
-</div>
-
 </body>
 </html>
