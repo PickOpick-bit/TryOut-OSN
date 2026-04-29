@@ -10,8 +10,75 @@ import {
 } from './renderer.js';
 import CONFIG from './config.js';
 
-let timer      = null;
-let resultsMap = null;  // set after submission
+let timer        = null;
+let resultsMap   = null;
+let studentNama  = '';
+let studentKelas = '';
+let startTime    = null;
+
+// Google Apps Script URL
+const SHEETS_URL = 'https://script.google.com/a/macros/sma.yps.sch.id/s/AKfycbxZdnsyg0iq4GME6q2NN9YuccWBDBsdmIVu5SezC41ujJ9v8Fc_vajlO0rn7AIRKXVJ/exec';
+
+// ── Student Form ──────────────────────────────────────────────────────────────
+
+function initStudentForm() {
+  const btnMulai = document.getElementById('btn-mulai');
+
+  btnMulai.addEventListener('click', () => {
+    const nama  = document.getElementById('input-nama').value.trim();
+    const kelas = document.getElementById('input-kelas').value;
+
+    if (!nama) {
+      alert('Nama tidak boleh kosong!');
+      document.getElementById('input-nama').focus();
+      return;
+    }
+    if (!kelas) {
+      alert('Silakan pilih kelas terlebih dahulu!');
+      return;
+    }
+
+    studentNama  = nama;
+    studentKelas = kelas;
+    startTime    = Date.now();
+
+    document.getElementById('student-form-screen').style.display = 'none';
+    init();
+  });
+
+  document.getElementById('input-nama').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-mulai').click();
+  });
+}
+
+// ── Send to Google Sheets ─────────────────────────────────────────────────────
+
+async function sendToSheets(grading) {
+  const durasi = startTime ? Math.round((Date.now() - startTime) / 60000) : 0;
+
+  const payload = {
+    nama:   studentNama,
+    kelas:  studentKelas,
+    skor:   grading.score,
+    benar:  grading.correct,
+    salah:  grading.wrong,
+    kosong: grading.empty,
+    total:  grading.total,
+    durasi: durasi,
+  };
+
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('✅ Data terkirim ke Google Sheets');
+  } catch (err) {
+    console.warn('⚠️ Gagal kirim ke Sheets:', err.message);
+  }
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -26,7 +93,6 @@ async function init() {
       return;
     }
 
-    // Init answer map
     state.questions.forEach(q => (state.answers[q._id] = ''));
 
     buildNavGrid(navigateTo);
@@ -46,7 +112,7 @@ async function init() {
 function startTimer() {
   const el = document.getElementById('timer-display');
   timer = new ExamTimer(CONFIG.EXAM_DURATION_SECONDS, el, () => {
-    handleSubmit(true); // auto-submit on expire
+    handleSubmit(true);
   });
   timer.start();
 }
@@ -69,7 +135,6 @@ function handleAnswer(value) {
   updateNavGrid(resultsMap);
   updateProgress();
 
-  // Visual feedback on input
   const inp = document.getElementById('answer-input');
   if (inp) inp.classList.toggle('filled', value.trim() !== '');
 }
@@ -85,7 +150,6 @@ async function handleSubmit(auto = false) {
     if (!confirm(`Masih ada ${unanswered} soal yang belum dijawab.\nYakin ingin mengumpulkan?`)) return;
   }
 
-  // Disable submit button immediately
   const submitBtn = document.getElementById('submit-btn');
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menilai...'; }
 
@@ -93,14 +157,16 @@ async function handleSubmit(auto = false) {
   state.submitted = true;
 
   try {
-    const payload  = buildSubmitPayload();
-    const grading  = await submitExam(payload);
+    const payload = buildSubmitPayload();
+    const grading = await submitExam(payload);
 
-    resultsMap = indexResults(grading.results);
+    resultsMap    = indexResults(grading.results);
     state.results = grading;
     state.score   = grading.score;
 
-    // Re-render current question in review mode
+    // Kirim ke Google Sheets di background
+    sendToSheets(grading);
+
     renderQuestion(state.currentIdx, resultsMap, handleAnswer, navigateTo);
     updateNavGrid(resultsMap);
     showScoreModal(grading);
@@ -117,22 +183,20 @@ async function handleSubmit(auto = false) {
 // ── Retry ─────────────────────────────────────────────────────────────────────
 
 function handleRetry() {
-  // Reset state
   state.submitted  = false;
   state.currentIdx = 0;
   state.results    = null;
   state.score      = 0;
   resultsMap       = null;
+  startTime        = Date.now();
   state.questions.forEach(q => (state.answers[q._id] = ''));
 
   document.getElementById('modal-overlay').classList.remove('show');
   timer?.stop();
-
-  // Re-fetch fresh questions
   init();
 }
 
-// ── Review Navigation (from modal) ────────────────────────────────────────────
+// ── Review ────────────────────────────────────────────────────────────────────
 
 function handleReviewAll() {
   document.getElementById('modal-overlay').classList.remove('show');
@@ -142,8 +206,8 @@ function handleReviewAll() {
 // ── Event Wiring ──────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+  initStudentForm();
   document.getElementById('submit-btn')?.addEventListener('click', () => handleSubmit(false));
   document.getElementById('btn-retry')?.addEventListener('click', handleRetry);
   document.getElementById('btn-review')?.addEventListener('click', handleReviewAll);
-  init();
 });
