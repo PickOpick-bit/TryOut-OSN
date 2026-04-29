@@ -17,8 +17,7 @@ let studentKelas = '';
 let startTime    = null;
 
 // Google Apps Script URL
-const SHEETS_URL = 'https://script.google.com/a/macros/sma.yps.sch.id/s/AKfycbxZdnsyg0iq4GME6q2NN9YuccWBDBsdmIVu5SezC41ujJ9v8Fc_vajlO0rn7AIRKXVJ/exec';
-
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw8pT-Aul0GVj93BrVTIwH4Psyap1zc9h3Ko4kh-OOtsLGxQDStkG3uHa7gw4rX3Rewmg/exec';
 // ── Student Form ──────────────────────────────────────────────────────────────
 
 function initStudentForm() {
